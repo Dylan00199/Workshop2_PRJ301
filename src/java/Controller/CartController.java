@@ -12,13 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-/**
- * DB-backed shopping cart (see Model.CartItem / Model.Service.CartService).
- * The cart is keyed by account, so it requires login - unauthenticated
- * requests are redirected to login.jsp. session.cartCount is kept in sync
- * on every mutation purely so navbar.jsp can show the badge without
- * re-querying the DB on every page render.
- */
+
 @WebServlet(name = "CartController", urlPatterns = {"/CartController"})
 public class CartController extends HttpServlet {
 

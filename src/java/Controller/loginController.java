@@ -42,6 +42,7 @@ public class loginController extends HttpServlet {
             throws ServletException, IOException {
         HttpSession session = request.getSession(false);
         String action = request.getParameter("action");
+        
         if ("logout".equalsIgnoreCase(action)) {
             if (session != null) {
                 session.invalidate();
@@ -50,12 +51,15 @@ public class loginController extends HttpServlet {
         }
     }
 
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+
+@Override
+protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession(true);
+
         String account = request.getParameter("username");
         String pass = request.getParameter("password");
+
         String msg = "";
         AccountService accountService = new AccountService();
         try {
@@ -163,7 +167,7 @@ public class loginController extends HttpServlet {
     }
 
     @Override
-    public String getServletInfo() {
+public String getServletInfo() {
         return "Short description";
     }
 }

@@ -640,9 +640,6 @@
                             </div>
                             <form action="AccountController" method="POST">
                                 <input type="hidden" name="action" value="deleteAccount">
-
-                                <input type="hidden" name="id" value="${acc.account}"> 
-
                                 <button type="submit" class="btn-danger"
                                         onclick="return confirm('Are you sure you want to delete your account? This cannot be undone.')">
                                     Delete account

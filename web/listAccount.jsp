@@ -219,9 +219,6 @@
                         </tbody>
                     </table>
                 </c:when>
-
-                <%-- BUG FIX #6: Added empty-state message instead of silently showing
-                     a blank table when there are no accounts --%>
                 <c:otherwise>
                     <p class="empty-state">No accounts found in the system.</p>
                 </c:otherwise>
