@@ -14,22 +14,34 @@ public class Product {
     @Id
     @Column(name = "productId")
     private String productId;
+    
     @Column(name = "productName")
     private String productName;
+    
     @Column(name = "productImage")
     private String productImage;
+    
     @Column(name = "brief")
     private String brief;
+    
     @Column(name = "postedDate")
+    @Temporal(javax.persistence.TemporalType.DATE)
     private Date postedDate;
-    @Column(name = "typeId")
+    
+    @JoinColumn(name = "typeId")
+    @ManyToOne
     private Category type;
-    @Column(name = "account")
+    
+    @JoinColumn(name = "account")
+    @ManyToOne
     private Account account;
+    
     @Column(name = "unit")
     private String unit;
+    
     @Column(name = "price")
     private int price;
+    
     @Column(name = "discount")
     private int discount;
 

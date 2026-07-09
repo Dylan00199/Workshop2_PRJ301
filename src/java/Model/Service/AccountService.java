@@ -35,7 +35,10 @@ public class AccountService implements Accessible<Account> {
                 em.getTransaction().commit();
                 result = 1;
             }
-        } finally {
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+        finally {
             em.close();
         }
         return result;
@@ -58,36 +61,6 @@ public class AccountService implements Accessible<Account> {
         }
         return result;
     }
-//
-//    public void updateIsUse(Account obj) {
-//        Connection c = ConnectDB.getConnection();
-//        try {
-//            String sql = "UPDATE accounts SET isUse = ? WHERE account = ?;";
-//            PreparedStatement ps = c.prepareStatement(sql);
-//            ps.setString(1, String.valueOf(obj.isUse()));
-//            ps.setString(2, obj.getAccount());
-//            ps.executeUpdate();
-//
-//            ConnectDB.closeConnection(c);
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//        }
-//    }
-//
-//    public void updatePassword(Account obj, String newPassword) {
-//        Connection c = ConnectDB.getConnection();
-//        try {
-//            String sql = "UPDATE accounts SET pass = ? WHERE account = ?;";
-//            PreparedStatement ps = c.prepareStatement(sql);
-//            ps.setString(1, newPassword);
-//            ps.setString(2, obj.getAccount());
-//            ps.executeUpdate();
-//
-//            ConnectDB.closeConnection(c);
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//        }
-//    }
 
     @Override
     public int deleteRec(Account obj) {

@@ -266,7 +266,6 @@ public class AccountController extends HttpServlet {
                     request.getRequestDispatcher("account.jsp").forward(request, response);
                     break;
                 case "addAccount": {
-
                     String errorMsg = null;
                     if (!ValidationUtils.isValidEmail(account)) {
                         errorMsg = "Invalid email address.";

@@ -2,7 +2,9 @@ package Controller;
 
 import Model.Account;
 import Model.Service.AccountService;
+import Model.Service.CartService;
 import Utilities.PasswordUtils;
+import Utilities.SessionManager;
 import java.io.IOException;
 import java.io.PrintWriter;
 import javax.servlet.ServletException;
@@ -119,7 +121,7 @@ public class loginController extends HttpServlet {
                     return;
                 }
 
-                msg = "Incorrect password! Please try again.<br> You have " + NUMBER_WRONG_PASS + " attempts left.";
+                msg = "Incorrect password! Please try again. You have " + NUMBER_WRONG_PASS + " attempts left.";
                 request.setAttribute("msg", msg);
                 request.getRequestDispatcher("login.jsp").forward(request, response);
                 return;
@@ -142,6 +144,14 @@ public class loginController extends HttpServlet {
             }
             HttpSession newSession = request.getSession(true);
             newSession.setAttribute("login", a);
+
+            SessionManager.getInstance().registerLogin(a.getAccount(), newSession);
+            CartService cartService = new CartService();
+            try {
+                newSession.setAttribute("cartCount", cartService.getCartCount(a.getAccount()));
+            } finally {
+                cartService.close();
+            }
 
             response.sendRedirect("index.jsp");
         } catch (Exception e) {
