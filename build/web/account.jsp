@@ -1,5 +1,6 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 
 <!DOCTYPE html>
@@ -497,7 +498,16 @@
                                 </div>
                                 <div class="info-item">
                                     <div class="info-label">Date of birth</div>
-                                    <div class="info-value ${login.dob eq '—' ? 'muted' : ''}">${login.dob}</div>
+                                    <div class="info-value ${login.dob eq '—' ? 'muted' : ''}">
+                                        <c:choose>
+                                            <c:when test="${login.dob eq '—'}">
+                                                ${login.dob}
+                                            </c:when>
+                                            <c:otherwise>
+                                                <fmt:formatDate value="${login.dob}" pattern="dd/MM/yyyy" />
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </div>
                                 </div>
                                 <div class="info-item">
                                     <div class="info-label">Gender</div>
@@ -628,11 +638,8 @@
                                 Once you delete your account, all data will be permanently removed.<br>
                                 This action cannot be undone.
                             </div>
-                            <form action="MainController" method="POST">
+                            <form action="AccountController" method="POST">
                                 <input type="hidden" name="action" value="deleteAccount">
-
-                                <input type="hidden" name="id" value="${acc.account}"> 
-
                                 <button type="submit" class="btn-danger"
                                         onclick="return confirm('Are you sure you want to delete your account? This cannot be undone.')">
                                     Delete account

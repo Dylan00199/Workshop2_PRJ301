@@ -2,14 +2,18 @@ package Controller;
 
 import Model.Account;
 import Model.Category;
+import Model.Comment;
 import Model.Product;
+import Model.Service.CommentService;
 import Model.Service.ProductService;
 import Model.Service.CategoryService;
+import Model.Service.ViewHistoryService;
 import java.io.File;
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 import javax.servlet.ServletException;
-import javax.servlet.annotation.MultipartConfig; // RẤT QUAN TRỌNG
+import javax.servlet.annotation.MultipartConfig; 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -24,6 +28,56 @@ import javax.servlet.http.Part;
 )
 @WebServlet(name = "ProductController", urlPatterns = {"/ProductController"})
 public class ProductController extends HttpServlet {
+
+    private List<Product> runSearch(HttpServletRequest request, ProductService productService) {
+        String keyword = request.getParameter("keyword");
+
+        Integer categoryId = null;
+        String categoryIdStr = request.getParameter("categoryId");
+        if (categoryIdStr != null && !categoryIdStr.isEmpty()) {
+            try {
+                categoryId = Integer.parseInt(categoryIdStr);
+            } catch (NumberFormatException ignored) {
+            }
+        }
+
+        Integer minPrice = null;
+        String minPriceStr = request.getParameter("minPrice");
+        if (minPriceStr != null && !minPriceStr.isEmpty()) {
+            try {
+                minPrice = Integer.parseInt(minPriceStr);
+            } catch (NumberFormatException ignored) {
+            }
+        }
+
+        Integer maxPrice = null;
+        String maxPriceStr = request.getParameter("maxPrice");
+        if (maxPriceStr != null && !maxPriceStr.isEmpty()) {
+            try {
+                maxPrice = Integer.parseInt(maxPriceStr);
+            } catch (NumberFormatException ignored) {
+            }
+        }
+
+        Boolean discountedOnly = null;
+        String discountFilter = request.getParameter("discountFilter");
+        if ("discounted".equals(discountFilter)) {
+            discountedOnly = Boolean.TRUE;
+        } else if ("noDiscount".equals(discountFilter)) {
+            discountedOnly = Boolean.FALSE;
+        }
+
+        String sortByPrice = request.getParameter("sortByPrice"); 
+
+        boolean anyFilter = (keyword != null && !keyword.isEmpty()) || categoryId != null
+                || minPrice != null || maxPrice != null || discountedOnly != null
+                || (sortByPrice != null && !sortByPrice.isEmpty());
+
+        if (anyFilter) {
+            return productService.search(keyword, categoryId, minPrice, maxPrice, discountedOnly, sortByPrice);
+        }
+        return productService.listAll();
+    }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -40,8 +94,9 @@ public class ProductController extends HttpServlet {
         CategoryService categoryService = new CategoryService();
         try {
             switch (action) {
-                case "listProduct":
-                    List<Product> list = productService.listAll();
+                case "listProduct": {
+                    List<Product> list = runSearch(request, productService);
+                    request.setAttribute("cats", categoryService.listAll());
                     if (list != null && !list.isEmpty()) {
                         msg = "List products successfully!";
                         request.setAttribute("products", list);
@@ -49,10 +104,12 @@ public class ProductController extends HttpServlet {
                         request.getRequestDispatcher("listProducts.jsp").forward(request, response);
                         return;
                     }
-                    msg = "List products fail!";
+                    msg = "No products match your search/filter.";
+                    request.setAttribute("products", list);
                     request.setAttribute("error_msg", msg);
                     request.getRequestDispatcher("listProducts.jsp").forward(request, response);
                     break;
+                }
 
                 case "deleteProduct":
                     if (login == null || login.getRoleInSystem() != 1) {
@@ -75,11 +132,48 @@ public class ProductController extends HttpServlet {
                     request.getRequestDispatcher("ProductController?action=listProduct").forward(request, response);
                     break;
 
-                case "home":
-                    List<Product> listPublic = productService.listAll();
+                case "home": {
+                    List<Product> listPublic = runSearch(request, productService);
                     request.setAttribute("list", listPublic);
+                    request.setAttribute("cats", categoryService.listAll());
                     request.getRequestDispatcher("index.jsp").forward(request, response);
                     break;
+                }
+
+                case "detail": {
+                    String detailId = request.getParameter("id");
+                    if (detailId == null || detailId.isEmpty()) {
+                        response.sendRedirect("ProductController?action=home");
+                        return;
+                    }
+                    Product detail = productService.getObjectById(detailId);
+                    if (detail == null) {
+                        request.setAttribute("error_msg", "Product not found.");
+                        request.getRequestDispatcher("ProductController?action=home").forward(request, response);
+                        return;
+                    }
+
+                    if (login != null) {
+                        ViewHistoryService viewHistoryService = new ViewHistoryService();
+                        try {
+                            viewHistoryService.recordView(login.getAccount(), detail.getProductId(), detail.getPrice());
+                        } finally {
+                            viewHistoryService.close();
+                        }
+                    }
+
+                    CommentService commentService = new CommentService();
+                    try {
+                        request.setAttribute("comments", commentService.listByProduct(detailId));
+                    } finally {
+                        commentService.close();
+                    }
+
+                    request.setAttribute("p", detail);
+                    request.getRequestDispatcher("ProductDetail.jsp").forward(request, response);
+                    break;
+                }
+
                 case "updateProduct":
                     if (login == null || login.getRoleInSystem() != 1) {
                         response.sendRedirect("index.jsp");
@@ -167,7 +261,6 @@ public class ProductController extends HttpServlet {
                         Part filePart = request.getPart("image");
                         if (filePart != null && filePart.getSize() > 0) {
                             String originalFileName = filePart.getSubmittedFileName();
-                            // Fix path: Đưa hẳn vào thư mục /images/sanPham/ để frontend gọi lên được
                             String uploadPath = getServletContext().getRealPath("/images/sanPham");
                             File uploadFolder = new File(uploadPath);
                             if (!uploadFolder.exists()) {
@@ -193,11 +286,10 @@ public class ProductController extends HttpServlet {
                         obj.setType(cat);
 
                         productService.insertRec(obj);
-                        // Nên redirect về trang quản lý thay vì index
                         response.sendRedirect("ProductController?action=listProduct");
                     } catch (Exception e) {
                         e.printStackTrace();
-                        request.setAttribute("error_msg", "Lỗi hệ thống: " + e.getMessage());
+                        request.setAttribute("error_msg", "Systen error: " + e.getMessage());
                         request.getRequestDispatcher("addProduct.jsp").forward(request, response);
                         return;
                     }
@@ -218,13 +310,10 @@ public class ProductController extends HttpServlet {
                         if (postDateString != null && !postDateString.isEmpty()) {
                             postDate = java.sql.Date.valueOf(postDateString);
                         }
-
-                        // ĐÃ FIX LỖI UPLOAD ẢNH
                         String imageUrl = null;
                         Part filePart = request.getPart("image");
                         if (filePart != null && filePart.getSize() > 0) {
                             String originalFileName = filePart.getSubmittedFileName();
-                            // Fix path
                             String uploadPath = getServletContext().getRealPath("/images/sanPham");
                             File uploadFolder = new File(uploadPath);
                             if (!uploadFolder.exists()) {
@@ -260,15 +349,38 @@ public class ProductController extends HttpServlet {
                         obj.setType(cat);
 
                         productService.updateRec(obj);
-                        // Nên redirect về trang quản lý thay vì index
                         response.sendRedirect("ProductController?action=listProduct");
                     } catch (Exception e) {
                         e.printStackTrace();
-                        request.setAttribute("error_msg", "Lỗi hệ thống: " + e.getMessage());
-                        // Nếu lỗi, điều hướng lại về trang update kèm theo ID để load lại form
+                        request.setAttribute("error_msg", "System error: " + e.getMessage());
                         response.sendRedirect("ProductController?action=updateProduct&id=" + request.getParameter("id") + "&error=System Error");
                     }
                     break;
+
+                case "addComment": {
+                    String productId = request.getParameter("productId");
+                    String content = request.getParameter("content");
+
+                    if (login == null) {
+                        response.sendRedirect("login.jsp");
+                        return;
+                    }
+                    if (productId == null || productId.isEmpty() || content == null || content.trim().isEmpty()) {
+                        response.sendRedirect("ProductController?action=detail&id=" + productId);
+                        return;
+                    }
+
+                    CommentService commentService = new CommentService();
+                    try {
+                        Comment c = new Comment(productId, login.getAccount(), content.trim(), new Date());
+                        commentService.insertRec(c);
+                    } finally {
+                        commentService.close();
+                    }
+                    response.sendRedirect("ProductController?action=detail&id=" + productId);
+                    break;
+                }
+
                 default:
                     response.sendRedirect("index.jsp");
                     break;

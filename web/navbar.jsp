@@ -58,6 +58,17 @@
                         </c:if>
                 </ul>
             </li>
+
+            <li><a href="CartController" class="nav-link">
+                    Cart
+                    <c:if test="${not empty sessionScope.login && not empty sessionScope.cartCount && sessionScope.cartCount > 0}">
+                        (${sessionScope.cartCount})
+                    </c:if>
+                </a></li>
+
+            <c:if test="${sessionScope.login.roleInSystem == 1}">
+                <li><a href="Admin.jsp" class="nav-link">Admin</a></li>
+            </c:if>
         </ul>
 
         <div class="nav-auth">
@@ -114,6 +125,7 @@
         display: flex;
         list-style: none;
         gap: 2px;
+        align-items: center;
     }
     .nav-link {
         display: block;

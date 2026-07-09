@@ -40,6 +40,29 @@
                 background: #1e9050;
             }
 
+            /* ===== SEARCH & FILTER BAR (same params as index.jsp) ===== */
+            .filter-bar {
+                display: flex; flex-wrap: wrap; align-items: end; gap: 12px;
+                padding: 16px 18px; background: #f8f9fa; border: 1px solid #eee; border-radius: 8px;
+                margin-bottom: 20px;
+            }
+            .filter-group { display: flex; flex-direction: column; gap: 4px; }
+            .filter-group label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #999; letter-spacing: 0.3px; }
+            .filter-group input[type="text"],
+            .filter-group input[type="number"],
+            .filter-group select {
+                padding: 7px 10px; font-size: 13px; border: 1px solid #ccc; border-radius: 5px; outline: none;
+                min-width: 110px;
+            }
+            .filter-group input:focus, .filter-group select:focus { border-color: #2980b9; }
+            .filter-price-range { display: flex; align-items: center; gap: 6px; }
+            .filter-price-range span { color: #aaa; font-size: 12px; }
+            .filter-actions { display: flex; gap: 8px; }
+            .btn-filter { padding: 8px 20px; background: #2980b9; color: #fff; border: none; border-radius: 5px; font-size: 13px; font-weight: 600; cursor: pointer; }
+            .btn-filter:hover { background: #1f6fa0; }
+            .btn-reset { padding: 8px 16px; background: #fff; color: #666; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; cursor: pointer; text-decoration: none; }
+            .btn-reset:hover { background: #f0f0f0; }
+
             /* ===== TABLE ===== */
             .data-table {
                 width: 100%;
@@ -210,6 +233,60 @@
                 <a href="addProduct.jsp" class="btn-add">+ Add product</a>
             </div>
 
+            <%-- ===== SEARCH & FILTER BAR ===== --%>
+            <form action="ProductController" method="GET" class="filter-bar">
+                <input type="hidden" name="action" value="listProduct">
+
+                <div class="filter-group">
+                    <label>Search</label>
+                    <input type="text" name="keyword" placeholder="Product name..." value="${param.keyword}">
+                </div>
+
+                <div class="filter-group">
+                    <label>Category</label>
+                    <select name="categoryId">
+                        <option value="">All categories</option>
+                        <c:forEach var="c" items="${cats}">
+                            <option value="${c.typeId}" ${param.categoryId == c.typeId ? 'selected' : ''}>
+                                <c:out value="${c.categoryName}"/>
+                            </option>
+                        </c:forEach>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Price range (VND)</label>
+                    <div class="filter-price-range">
+                        <input type="number" name="minPrice" min="0" placeholder="Min" value="${param.minPrice}">
+                        <span>&#8212;</span>
+                        <input type="number" name="maxPrice" min="0" placeholder="Max" value="${param.maxPrice}">
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <label>Discount</label>
+                    <select name="discountFilter">
+                        <option value="">All products</option>
+                        <option value="discounted" ${param.discountFilter == 'discounted' ? 'selected' : ''}>Discounted only</option>
+                        <option value="noDiscount" ${param.discountFilter == 'noDiscount' ? 'selected' : ''}>No discount</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Sort by price</label>
+                    <select name="sortByPrice">
+                        <option value="">Default</option>
+                        <option value="asc" ${param.sortByPrice == 'asc' ? 'selected' : ''}>Low to high</option>
+                        <option value="desc" ${param.sortByPrice == 'desc' ? 'selected' : ''}>High to low</option>
+                    </select>
+                </div>
+
+                <div class="filter-actions">
+                    <button type="submit" class="btn-filter">Apply</button>
+                    <a href="ProductController?action=listProduct" class="btn-reset">Reset</a>
+                </div>
+            </form>
+
             <%-- ===== TABLE ===== --%>
             <table class="data-table">
                 <thead>
@@ -281,7 +358,7 @@
                                     <%-- Always render the Action cell so row/header column counts stay aligned,
                                          regardless of role. Buttons themselves are still admin-only. --%>
                                     <c:choose>
-                                        <c:when test="${not empty currentRole and currentRole.toLowerCase() eq 'admin'}">
+                                        <c:when test="${not empty sessionScope.login and sessionScope.login.roleInSystem == 1}">
                                             <td>
                                                 <a href="updateProduct.jsp?id=${p.productId}" class="btn btn-update">Update</a>
                                                 <a href="ProductController?action=deleteProduct&amp;id=${p.productId}"

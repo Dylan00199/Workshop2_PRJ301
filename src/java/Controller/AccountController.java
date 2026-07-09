@@ -98,13 +98,13 @@ public class AccountController extends HttpServlet {
                     Account active = accountService.getObjectById(request.getParameter("id"));
                     if (active != null) {
                         active.setIsUse(true);
-                        accountService.updateRec(active);
-                        msg = "Active account successfully!";
-                        request.setAttribute("success_msg", msg);
+                        int r = accountService.updateRec(active);
+                        msg = (r == 1) ? "Active account successfully!" : "Active account fail!";
+                        request.setAttribute(r == 1 ? "success_msg" : "error_msg", msg);
                         request.getRequestDispatcher("AccountController?action=listAccount").forward(request, response);
                         return;
                     }
-                    msg = "Active account fail!";
+                    msg = "Active account fail! Account not found.";
                     request.setAttribute("error_msg", msg);
                     request.getRequestDispatcher("AccountController?action=listAccount").forward(request, response);
                     break;
@@ -118,13 +118,13 @@ public class AccountController extends HttpServlet {
                     Account deactive = accountService.getObjectById(request.getParameter("id"));
                     if (deactive != null) {
                         deactive.setIsUse(false);
-                        accountService.updateRec(deactive);
-                        msg = "Deactive account successfully!";
-                        request.setAttribute("success_msg", msg);
+                        int r = accountService.updateRec(deactive);
+                        msg = (r == 1) ? "Deactive account successfully!" : "Deactive account fail!";
+                        request.setAttribute(r == 1 ? "success_msg" : "error_msg", msg);
                         request.getRequestDispatcher("AccountController?action=listAccount").forward(request, response);
                         return;
                     }
-                    msg = "Deactive account fail!";
+                    msg = "Deactive account fail! Account not found.";
                     request.setAttribute("error_msg", msg);
                     request.getRequestDispatcher("AccountController?action=listAccount").forward(request, response);
                     break;
@@ -136,13 +136,19 @@ public class AccountController extends HttpServlet {
 
                     Account del = accountService.getObjectById(request.getParameter("id"));
                     if (del != null) {
-                        accountService.deleteRec(del);
-                        msg = "Delete account successfully!";
-                        request.setAttribute("success_msg", msg);
+                        try {
+                            int r = accountService.deleteRec(del);
+                            msg = (r == 1) ? "Delete account successfully!" : "Delete account fail!";
+                            request.setAttribute(r == 1 ? "success_msg" : "error_msg", msg);
+                        } catch (RuntimeException dbEx) {
+                            request.setAttribute("error_msg",
+                                    "Delete account fail! This account still has related data "
+                                    + "(orders, comments, cart, etc.) and cannot be removed.");
+                        }
                         request.getRequestDispatcher("AccountController?action=listAccount").forward(request, response);
                         return;
                     }
-                    msg = "Delete account fail!";
+                    msg = "Delete account fail! Account not found.";
                     request.setAttribute("error_msg", msg);
                     request.getRequestDispatcher("AccountController?action=listAccount").forward(request, response);
                     break;
@@ -192,6 +198,28 @@ public class AccountController extends HttpServlet {
         Account login = (Account) session.getAttribute("login");
         try {
             switch (action) {
+                case "deleteAccount":
+                    if (login == null) {
+                        response.sendRedirect("index.jsp");
+                        return;
+                    }
+                    Account del = accountService.getObjectById(login.getAccount());
+                    if (del != null) {
+                        try {
+                            int result = accountService.deleteRec(del);
+                            if (result == 1) {
+                                response.sendRedirect("loginController?action=logout");
+                                return;
+                            }
+                        } catch (RuntimeException dbEx) {
+                            request.setAttribute("error_msg", "Delete account fail! This account still has related data (orders, comments, cart, etc.) and cannot be removed.");
+                            request.getRequestDispatcher("AccountController?action=displayAccount").forward(request, response);
+                            return;
+                        }
+                    }
+                    request.setAttribute("error_msg", "Delete account fail! Account not found.");
+                    request.getRequestDispatcher("AccountController?action=displayAccount").forward(request, response);
+                    break;
                 case "updateProfile":
                     if (login == null) {
                         response.sendRedirect("index.jsp");
@@ -203,7 +231,7 @@ public class AccountController extends HttpServlet {
                         request.getRequestDispatcher("account.jsp").forward(request, response);
                         return;
                     }
-                    //chekc phone                
+                    //chekc phone
                     if (!ValidationUtils.isValidPhone(phone)) {
                         request.setAttribute("error_msg", "Invalid phone number!");
                         request.getRequestDispatcher("account.jsp").forward(request, response);
@@ -218,17 +246,22 @@ public class AccountController extends HttpServlet {
                         profileToUpdate.setPhone(phone);
                         profileToUpdate.setDob(dob);
                         profileToUpdate.setGender(gender);
-                        accountService.updateRec(profileToUpdate);
-                        session.setAttribute("login", profileToUpdate);
+                        int r = accountService.updateRec(profileToUpdate);
+                        if (r == 1) {
+                            session.setAttribute("login", profileToUpdate);
+                            request.setAttribute("success_msg", "Profile updated successfully!");
+                        } else {
+                            request.setAttribute("error_msg", "Profile update failed!");
+                        }
+                    } else {
+                        request.setAttribute("error_msg", "Profile update failed! Account not found.");
                     }
 
-                    request.setAttribute("success_msg", "Profile updated successfully!");
                     request.getRequestDispatcher("account.jsp").forward(request, response);
                     break;
                 case "updateAccount":
                     String newUpPassword = request.getParameter("newPassword");
                     String confirmUpPassword = request.getParameter("confirmPassword");
-                    String pass = request.getParameter("Password");
 
                     if (newUpPassword == null) {
                         newUpPassword = "";
@@ -255,18 +288,17 @@ public class AccountController extends HttpServlet {
                         if (!newUpPassword.isEmpty()) {
                             accountUpdate.setPass(PasswordUtils.hash(newUpPassword));
                         }
-                        accountService.updateRec(accountUpdate);
-                        msg = "Updated account successfully!";
-                        request.setAttribute("success_msg", msg);
+                        int r = accountService.updateRec(accountUpdate);
+                        msg = (r == 1) ? "Updated account successfully!" : "Updated account fail!";
+                        request.setAttribute(r == 1 ? "success_msg" : "error_msg", msg);
                         request.getRequestDispatcher("account.jsp").forward(request, response);
                         return;
                     }
-                    msg = "Updated account fail!";
+                    msg = "Updated account fail! Account not found.";
                     request.setAttribute("error_msg", msg);
                     request.getRequestDispatcher("account.jsp").forward(request, response);
                     break;
                 case "addAccount": {
-
                     String errorMsg = null;
                     if (!ValidationUtils.isValidEmail(account)) {
                         errorMsg = "Invalid email address.";
@@ -274,6 +306,8 @@ public class AccountController extends HttpServlet {
                         errorMsg = "Password must be at least 8 characters, contain an uppercase letter and a digit.";
                     } else if (!ValidationUtils.isValidPhone(phone)) {
                         errorMsg = "Invalid Vietnamese phone number.";
+                    } else if (accountService.getObjectById(account) != null) {
+                        errorMsg = "An account with this email already exists.";
                     }
 
                     if (errorMsg != null) {
@@ -290,8 +324,23 @@ public class AccountController extends HttpServlet {
 
                     String hashedPass = PasswordUtils.hash(pw);
                     Account obj = new Account(account, hashedPass, firstName, lastName, dob, gender, phone, true, role);
-                    accountService.insertRec(obj);
-                    response.sendRedirect("index.jsp");
+                    try {
+                        int result = accountService.insertRec(obj);
+                        if (result == 1) {
+                            response.sendRedirect("login.jsp");
+                            return;
+                        }
+                        response.sendRedirect("index.jsp");
+                    } catch (RuntimeException dbEx) {
+                        request.setAttribute("error_msg", "Could not create account: " + dbEx.getMessage());
+                        request.setAttribute("prev_account", account);
+                        request.setAttribute("prev_fn", firstName);
+                        request.setAttribute("prev_ln", lastName);
+                        request.setAttribute("prev_phone", phone);
+                        request.setAttribute("prev_dob", dob);
+                        request.setAttribute("prev_gender", gender);
+                        request.getRequestDispatcher("addAccount.jsp").forward(request, response);
+                    }
                     break;
                 }
 
@@ -337,8 +386,12 @@ public class AccountController extends HttpServlet {
                         return;
                     }
                     login.setPass(PasswordUtils.hash(newPassword));
-                    accountService.updateRec(login);
-                    request.setAttribute("success_msg", msg);
+                    int r = accountService.updateRec(login);
+                    if (r == 1) {
+                        request.setAttribute("success_msg", msg);
+                    } else {
+                        request.setAttribute("error_msg", "Change Password failed!");
+                    }
                     request.getRequestDispatcher("account.jsp").forward(request, response);
                     break;
                 default:

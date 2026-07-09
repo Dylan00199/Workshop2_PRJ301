@@ -1,7 +1,4 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
+
 package Model.Service;
 
 import java.util.List;
@@ -28,13 +25,20 @@ public class AccountService implements Accessible<Account> {
     public int insertRec(Account obj) {
         EntityManager em = this.emf.createEntityManager();
         int result = 0;
+        EntityTransaction tx = em.getTransaction();
         try {
             if (obj != null) {
-                em.getTransaction().begin();
+                tx.begin();
                 em.persist(obj);
-                em.getTransaction().commit();
+                tx.commit();
                 result = 1;
             }
+        } catch (Exception e) {
+            if (tx.isActive()) {
+                tx.rollback();
+            }
+            e.printStackTrace();
+            throw new RuntimeException("insertRec failed: " + e.getMessage(), e);
         } finally {
             em.close();
         }
@@ -45,62 +49,46 @@ public class AccountService implements Accessible<Account> {
     public int updateRec(Account obj) {
         EntityManager em = this.emf.createEntityManager();
         int result = 0;
+        EntityTransaction tx = em.getTransaction();
         try {
-            Account accountUpdate = em.find(Account.class, obj.getAccount());
-            if (accountUpdate != null) {
-                em.getTransaction().begin();
-                em.merge(accountUpdate);
-                em.getTransaction().commit();
+            Account existing = em.find(Account.class, obj.getAccount());
+            if (existing != null) {
+                tx.begin();
+                em.merge(obj);
+                tx.commit();
                 result = 1;
             }
+        } catch (Exception e) {
+            if (tx.isActive()) {
+                tx.rollback();
+            }
+            e.printStackTrace();
+            throw new RuntimeException("updateRec failed: " + e.getMessage(), e);
         } finally {
             em.close();
         }
         return result;
     }
-//
-//    public void updateIsUse(Account obj) {
-//        Connection c = ConnectDB.getConnection();
-//        try {
-//            String sql = "UPDATE accounts SET isUse = ? WHERE account = ?;";
-//            PreparedStatement ps = c.prepareStatement(sql);
-//            ps.setString(1, String.valueOf(obj.isUse()));
-//            ps.setString(2, obj.getAccount());
-//            ps.executeUpdate();
-//
-//            ConnectDB.closeConnection(c);
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//        }
-//    }
-//
-//    public void updatePassword(Account obj, String newPassword) {
-//        Connection c = ConnectDB.getConnection();
-//        try {
-//            String sql = "UPDATE accounts SET pass = ? WHERE account = ?;";
-//            PreparedStatement ps = c.prepareStatement(sql);
-//            ps.setString(1, newPassword);
-//            ps.setString(2, obj.getAccount());
-//            ps.executeUpdate();
-//
-//            ConnectDB.closeConnection(c);
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//        }
-//    }
 
     @Override
     public int deleteRec(Account obj) {
         EntityManager em = this.emf.createEntityManager();
         int result = 0;
+        EntityTransaction tx = em.getTransaction();
         try {
             Account accountDelete = em.find(Account.class, obj.getAccount());
             if (accountDelete != null) {
-                em.getTransaction().begin();
+                tx.begin();
                 em.remove(accountDelete);
-                em.getTransaction().commit();
+                tx.commit();
                 result = 1;
             }
+        } catch (Exception e) {
+            if (tx.isActive()) {
+                tx.rollback();
+            }
+            e.printStackTrace();
+            throw new RuntimeException("deleteRec failed: " + e.getMessage(), e);
         } finally {
             em.close();
         }
@@ -110,16 +98,11 @@ public class AccountService implements Accessible<Account> {
     @Override
     public Account getObjectById(String id) {
         EntityManager em = this.emf.createEntityManager();
-        int result = 0;
         try {
-            Account accountFound = em.find(Account.class, id);
-            if (accountFound != null) {
-                return accountFound;
-            }
+            return em.find(Account.class, id);
         } finally {
             em.close();
         }
-        return null;
     }
 
     @Override
