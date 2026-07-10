@@ -244,59 +244,20 @@ public class AccountController extends HttpServlet {
                         profileToUpdate.setFirstname(firstName);
                         profileToUpdate.setLastname(lastName);
                         profileToUpdate.setPhone(phone);
-                        profileToUpdate.setDob(dob);
+                        if (dob != null) {
+                            profileToUpdate.setDob(dob);
+                        }
                         profileToUpdate.setGender(gender);
                         int r = accountService.updateRec(profileToUpdate);
                         if (r == 1) {
                             session.setAttribute("login", profileToUpdate);
-                            request.setAttribute("success_msg", "Profile updated successfully!");
+                            response.sendRedirect("AccountController?action=displayAccount");
+                            return;
                         } else {
                             request.setAttribute("error_msg", "Profile update failed!");
+                            request.getRequestDispatcher("account.jsp").forward(request, response);
                         }
-                    } else {
-                        request.setAttribute("error_msg", "Profile update failed! Account not found.");
                     }
-
-                    request.getRequestDispatcher("account.jsp").forward(request, response);
-                    break;
-                case "updateAccount":
-                    String newUpPassword = request.getParameter("newPassword");
-                    String confirmUpPassword = request.getParameter("confirmPassword");
-
-                    if (newUpPassword == null) {
-                        newUpPassword = "";
-                    }
-                    if (confirmUpPassword == null) {
-                        confirmUpPassword = "";
-                    }
-
-                    if (!newUpPassword.equals(confirmUpPassword)) {
-                        msg = "Password doesn't match!";
-                        request.setAttribute("msg", msg);
-                        request.getRequestDispatcher("updateAccount.jsp").forward(request, response);
-                        return;
-                    }
-
-                    Account accountUpdate = accountService.getObjectById(account);
-                    if (accountUpdate != null) {
-                        accountUpdate.setFirstname(firstName);
-                        accountUpdate.setLastname(lastName);
-                        accountUpdate.setDob(dob);
-                        accountUpdate.setGender(gender);
-                        accountUpdate.setPhone(phone);
-                        accountUpdate.setRoleInSystem(role);
-                        if (!newUpPassword.isEmpty()) {
-                            accountUpdate.setPass(PasswordUtils.hash(newUpPassword));
-                        }
-                        int r = accountService.updateRec(accountUpdate);
-                        msg = (r == 1) ? "Updated account successfully!" : "Updated account fail!";
-                        request.setAttribute(r == 1 ? "success_msg" : "error_msg", msg);
-                        request.getRequestDispatcher("account.jsp").forward(request, response);
-                        return;
-                    }
-                    msg = "Updated account fail! Account not found.";
-                    request.setAttribute("error_msg", msg);
-                    request.getRequestDispatcher("account.jsp").forward(request, response);
                     break;
                 case "addAccount": {
                     String errorMsg = null;
@@ -388,11 +349,11 @@ public class AccountController extends HttpServlet {
                     login.setPass(PasswordUtils.hash(newPassword));
                     int r = accountService.updateRec(login);
                     if (r == 1) {
-                        request.setAttribute("success_msg", msg);
+                        response.sendRedirect("AccountController?action=displayAccount");
                     } else {
                         request.setAttribute("error_msg", "Change Password failed!");
+                        request.getRequestDispatcher("account.jsp").forward(request, response);
                     }
-                    request.getRequestDispatcher("account.jsp").forward(request, response);
                     break;
                 default:
                     response.sendRedirect("index.jsp");
