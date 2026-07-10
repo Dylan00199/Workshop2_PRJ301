@@ -422,6 +422,8 @@
         <c:if test="${empty sessionScope.login}">
             <c:redirect url="login.jsp"/>
         </c:if>
+
+        
         <div class="page-content">
             <h1 class="page-title">My account</h1>
 
@@ -539,12 +541,12 @@
                                         </div>
                                         <div class="edit-group">
                                             <label>Date of birth</label>
-                                            <input type="date" name="${login.dob eq '—' ? '' : login.dob}">
-                                        </div>
-                                        <div class="edit-group">
-                                            <label>Gender</label>
-                                            <select name="gender">
-                                                <option value="true" ${fn:toLowerCase(login.gender) eq 'male' ? 'selected' : ''}>Male</option>
+                                            <input type="date" name="dob" value="<c:if test="${not empty sessionScope.login.dob}"><fmt:formatDate value="${sessionScope.login.dob}" pattern="yyyy-MM-dd"/></c:if>">
+                                            </div>
+                                            <div class="edit-group">
+                                                <label>Gender</label>
+                                                <select name="gender">
+                                                    <option value="true" ${fn:toLowerCase(login.gender) eq 'male' ? 'selected' : ''}>Male</option>
                                                 <option value="false" ${fn:toLowerCase(login.gender) eq 'female' ? 'selected' : ''}>Female</option>
                                             </select>
                                         </div>

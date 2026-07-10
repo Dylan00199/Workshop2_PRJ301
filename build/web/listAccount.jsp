@@ -196,9 +196,6 @@
                                     </td>
 
                                     <td>
-                                        <a href="updateAccount.jsp?updateAccount=${acc.account}"
-                                           class="btn btn-update">Update</a>
-
                                         <c:choose>
                                             <c:when test="${acc.use}">
                                                 <a href="AccountController?action=deactiveAccount&id=${acc.account}"
