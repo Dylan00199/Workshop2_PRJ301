@@ -9,7 +9,9 @@ import javax.persistence.*;
 @Entity
 @Table(name = "categories")
 public class Category {
+
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "typeId")
     private int typeId;
     @Column(name = "categoryName")
@@ -54,6 +56,5 @@ public class Category {
     public String toString() {
         return "Category{" + "typeId=" + typeId + ", categoryName=" + categoryName + ", memo=" + memo + '}';
     }
-    
-    
+
 }

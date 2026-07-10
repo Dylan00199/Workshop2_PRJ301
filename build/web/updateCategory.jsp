@@ -4,7 +4,6 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <%
-    // Giữ lại phần lấy dữ liệu từ DB, sau đó đưa vào pageContext để EL có thể đọc được
     String id = request.getParameter("id");
     Category cat = new CategoryService().getObjectById(id);
     pageContext.setAttribute("cat", cat);
@@ -154,7 +153,9 @@
     <body>
 
         <%@ include file="navbar.jsp" %>
-
+        <c:if test="${empty sessionScope.login || sessionScope.login.roleInSystem != 1}">
+            <c:redirect url="index.jsp"></c:redirect> 
+        </c:if>
         <div class="page-content">
 
             <div class="breadcrumb">

@@ -99,7 +99,9 @@
     <body>
 
         <%@ include file="navbar.jsp" %>
-
+        <c:if test="${empty sessionScope.login || sessionScope.login.roleInSystem != 1}">
+            <c:redirect url="index.jsp"></c:redirect> 
+        </c:if>
         <div class="page-content">
             <h1 class="page-title">New category</h1>
 
@@ -120,7 +122,6 @@
                 <textarea name="memo"
                           placeholder="Những sản phẩm dùng cho du lịch, thám hiểm..."><c:out value="${param.memo}"/></textarea>
 
-                <span></span>
                 <div class="form-actions">
                     <button type="submit" class="btn-save">Save</button>
                     <a href="CategoryController?action=listCategory" class="btn-cancel" style="margin-left:8px">Cancel</a>

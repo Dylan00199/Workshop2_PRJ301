@@ -50,7 +50,7 @@ public class CategoryService implements Accessible<Category> {
             Category catUpdate = em.find(Category.class, obj.getTypeId());
             if (catUpdate != null) {
                 em.getTransaction().begin();
-                em.merge(catUpdate);
+                em.merge(obj);
                 em.getTransaction().commit();
                 result = 1;
             }
@@ -80,6 +80,11 @@ public class CategoryService implements Accessible<Category> {
 
     @Override
     public Category getObjectById(String id) {
+        int Id = Integer.parseInt(id);
+        return this.getObjectById(Id);
+    }
+
+    public Category getObjectById(int id) {
         EntityManager em = this.emf.createEntityManager();
         int result = 0;
         try {

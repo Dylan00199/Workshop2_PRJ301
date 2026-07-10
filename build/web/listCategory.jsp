@@ -102,7 +102,7 @@
             .data-table tr:hover td {
                 background: #f8f9fa;
             }
-            
+
             /* ===== ALERTS ===== */
             .alert {
                 padding: 10px 16px;
@@ -221,7 +221,9 @@
         <div class="page-content">
             <div class="page-header">
                 <h1 class="page-title">List of categories</h1>
-                <a href="addCategory.jsp" class="btn-add">+ Add category</a>
+                <c:if test="${sessionScope.login.roleInSystem == 1}">
+                    <a href="addCategory.jsp" class="btn-add">+ Add category</a>
+                </c:if>
             </div>
 
             <%-- ===== TABLE ===== --%>
@@ -248,12 +250,14 @@
                                     <td>${loop.count}</td>
                                     <td><strong><c:out value="${cat.categoryName}"/></strong></td>
                                     <td class="memo-cell"><c:out value="${cat.memo}"/></td>
-                                    <td>
-                                        <a href="updateCategory.jsp?id=${cat.typeId}" class="btn btn-update">Update</a>
-                                        <a href="CategoryController?action=deleteCategory&amp;id=${cat.typeId}"
-                                           class="btn btn-delete"
-                                           onclick="return confirm('Delete category &quot;<c:out value="${cat.categoryName}"/>&quot;?')">Delete</a>
-                                    </td>
+                                    <c:if test="${sessionScope.login.roleInSystem == 1}">
+                                        <td>
+                                            <a href="updateCategory.jsp?id=${cat.typeId}" class="btn btn-update">Update</a>
+                                            <a href="CategoryController?action=deleteCategory&amp;id=${cat.typeId}"
+                                               class="btn btn-delete"
+                                               onclick="return confirm('Delete category &quot;<c:out value="${cat.categoryName}"/>&quot;?')">Delete</a>
+                                        </td>
+                                    </c:if>
                                 </tr>
                             </c:forEach>
                         </c:otherwise>

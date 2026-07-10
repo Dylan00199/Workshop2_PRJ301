@@ -1,5 +1,6 @@
 package Controller;
 
+import Model.Account;
 import Model.Category;
 import Model.Service.CategoryService;
 import java.io.IOException;
@@ -18,10 +19,11 @@ public class CategoryController extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
+        Account login = (Account) session.getAttribute("login");
         String action = request.getParameter("action");
         String msg;
         if (action == null) {
-            action = "listCategory"; // Mặc định nếu không có action
+            action = "";
         }
         CategoryService categoryService = new CategoryService();
         try {
@@ -41,6 +43,10 @@ public class CategoryController extends HttpServlet {
                     break;
 
                 case "deleteCategory":
+                    if (login == null || login.getRoleInSystem() != 1) {
+                        response.sendRedirect("index.jsp");
+                        return;
+                    }
                     String deleteId = request.getParameter("id");
                     Category catDelete = categoryService.getObjectById(deleteId);
                     if (catDelete != null) {
@@ -54,20 +60,6 @@ public class CategoryController extends HttpServlet {
                     request.setAttribute("error_msg", msg);
                     request.getRequestDispatcher("CategoryController?action=listCategory").forward(request, response);
                     break;
-
-                case "updateCategory":
-                    String updateId = request.getParameter("id");
-                    if (updateId != null && !updateId.isEmpty()) {
-                        Category catUpdate = categoryService.getObjectById(updateId);
-                        request.setAttribute("cat", catUpdate);
-                        request.getRequestDispatcher("updateCategory.jsp").forward(request, response);
-                        return;
-                    }
-                    msg = "Invalid update id";
-                    request.setAttribute("error_msg", msg);
-                    request.getRequestDispatcher("updateCategory.jsp").forward(request, response);
-                    break;
-
                 default:
                     response.sendRedirect("index.jsp");
                     break;
@@ -85,8 +77,16 @@ public class CategoryController extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
-
+        HttpSession session = request.getSession();
+        Account login = (Account) session.getAttribute("login");
+        if (login == null || login.getRoleInSystem() != 1) {
+            response.sendRedirect("index.jsp");
+            return;
+        }
         String action = request.getParameter("action");
+        if (action == null) {
+            action = "";
+        }
         String categoryName = request.getParameter("categoryName");
         String memo = request.getParameter("memo");
         String msg;
@@ -96,11 +96,11 @@ public class CategoryController extends HttpServlet {
                 case "addCategory":
                     if (categoryName != null && !categoryName.isEmpty()) {
                         Category newObj = new Category(0, categoryName.trim(), memo);
-                        categoryService.insertRec(newObj);
-                        msg = "Add category successfully!";
-                        request.setAttribute("success_msg", msg);
-                        request.getRequestDispatcher("CategoryController?action=listCategory").forward(request, response);
-                        return;
+                        int result = categoryService.insertRec(newObj);
+                        if (result == 1) {
+                            response.sendRedirect("CategoryController?action=listCategory");
+                            return;
+                        }
                     }
                     msg = "Add category fail!";
                     request.setAttribute("error_msg", msg);
@@ -115,18 +115,17 @@ public class CategoryController extends HttpServlet {
                         if (memo != null) {
                             catUpdate.setMemo(memo);
                         }
-                        categoryService.updateRec(catUpdate);
-
-                        request.setAttribute("success_msg", "Category updated successfully!");
-                        request.setAttribute("cat", catUpdate); // Giữ lại data để hiện lên form
-                        request.getRequestDispatcher("updateCategory.jsp").forward(request, response);
-                        return;
+                        int result = categoryService.updateRec(catUpdate);
+                        if (result == 1) {
+                            response.sendRedirect("CategoryController?action=listCategory");
+                            return;
+                        }
                     }
                     request.setAttribute("error_msg", "Updated category fail!");
                     request.getRequestDispatcher("updateCategory.jsp").forward(request, response);
                     break;
-
                 default:
+                    System.out.println("DEFAULT HIT, action=[" + action + "]");
                     response.sendRedirect("index.jsp");
                     break;
             }
@@ -136,7 +135,7 @@ public class CategoryController extends HttpServlet {
             if ("updateCategory".equals(action)) {
                 request.getRequestDispatcher("updateCategory.jsp").forward(request, response);
             } else {
-                request.getRequestDispatcher("CategoryController?action=listCategory").forward(request, response);
+                request.getRequestDispatcher("addCategory.jsp").forward(request, response);
             }
         } finally {
             categoryService.close();
