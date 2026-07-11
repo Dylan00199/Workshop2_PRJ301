@@ -1,7 +1,8 @@
 <%@page import="Model.Service.CategoryService"%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="java.util.List" %>
-<%@ page import="Model.Category" %> 
+<%@ page import="Model.Category" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -229,11 +230,20 @@
             <h1 class="page-title">Add new product</h1>
 
             <%-- Error display --%>
-            <% CategoryService categoryService = new CategoryService();
+            <%
+                CategoryService categoryService = new CategoryService();
+                List<Category> catList = categoryService.listAll();
+                request.setAttribute("catList", catList);
+                categoryService.close();
+
                 String errorMsg = (String) request.getAttribute("error_msg");
                 if (errorMsg != null) {%>
             <div class="error-msg"><%= errorMsg%></div>
             <% }%>
+
+            <c:if test="${sessionScope.login.roleInSystem != 1}">
+                <c:redirect url="index.jsp"></c:redirect>
+            </c:if>
 
             <form action="ProductController" method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="action" value="addProduct">
@@ -256,8 +266,8 @@
                         <label>Category <span class="required">*</span></label>
                         <select name="categoryId">
                             <option value="">-- Select category --</option>
-                            <c:if test="${not empty cats}">
-                                <c:forEach var="c" items="${categoryService.listAll()}">
+                            <c:if test="${not empty catList}">
+                                <c:forEach var="c" items="${catList}">
                                     <option value="${c.typeId}" ${c.typeId == param.categoryId ? 'selected' : ''}>
                                         ${c.categoryName}
                                     </option>

@@ -173,28 +173,6 @@ public class ProductController extends HttpServlet {
                     request.getRequestDispatcher("ProductDetail.jsp").forward(request, response);
                     break;
                 }
-
-                case "updateProduct":
-                    if (login == null || login.getRoleInSystem() != 1) {
-                        response.sendRedirect("index.jsp");
-                        return;
-                    }
-                    String updateId = request.getParameter("id");
-                    if (updateId != null) {
-                        Product p = productService.getObjectById(updateId);
-                        if (p != null) {
-                            List<Category> cats = categoryService.listAll();
-
-                            request.setAttribute("p", p);
-                            request.setAttribute("cats", cats);
-                            request.getRequestDispatcher("updateProduct.jsp").forward(request, response);
-                            return;
-                        }
-                    }
-                    msg = "Load updated product fail!";
-                    request.setAttribute("error_msg", msg);
-                    request.getRequestDispatcher("updateProduct.jsp").forward(request, response);
-                    break;
                 default:
                     response.sendRedirect("index.jsp");
                     break;
@@ -227,6 +205,7 @@ public class ProductController extends HttpServlet {
         String brief = request.getParameter("brief");
         String priceStr = request.getParameter("price");
         String discountStr = request.getParameter("discount");
+        String unit = request.getParameter("unit");
 
         String msg;
         ProductService productService = new ProductService();
@@ -256,7 +235,6 @@ public class ProductController extends HttpServlet {
                             postDate = java.sql.Date.valueOf(postDateString);
                         }
 
-                        // ĐÃ FIX LỖI UPLOAD ẢNH
                         String imageUrl = null;
                         Part filePart = request.getPart("image");
                         if (filePart != null && filePart.getSize() > 0) {
@@ -301,7 +279,6 @@ public class ProductController extends HttpServlet {
                         return;
                     }
                     try {
-
                         int categoryId = (categoryIdStr != null && !categoryIdStr.isEmpty()) ? Integer.parseInt(categoryIdStr) : 0;
                         int price = (priceStr != null && !priceStr.isEmpty()) ? Integer.parseInt(priceStr) : 0;
                         int discount = (discountStr != null && !discountStr.isEmpty()) ? Integer.parseInt(discountStr) : 0;
@@ -343,6 +320,7 @@ public class ProductController extends HttpServlet {
                         obj.setPostedDate(postDate);
                         obj.setAccount(login);
                         obj.setProductImage(imageUrl);
+                        obj.setUnit(unit);
 
                         Category cat = new Category();
                         cat.setTypeId(categoryId);
