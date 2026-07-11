@@ -42,26 +42,80 @@
 
             /* ===== SEARCH & FILTER BAR (same params as index.jsp) ===== */
             .filter-bar {
-                display: flex; flex-wrap: wrap; align-items: end; gap: 12px;
-                padding: 16px 18px; background: #f8f9fa; border: 1px solid #eee; border-radius: 8px;
+                display: flex;
+                flex-wrap: wrap;
+                align-items: end;
+                gap: 12px;
+                padding: 16px 18px;
+                background: #f8f9fa;
+                border: 1px solid #eee;
+                border-radius: 8px;
                 margin-bottom: 20px;
             }
-            .filter-group { display: flex; flex-direction: column; gap: 4px; }
-            .filter-group label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #999; letter-spacing: 0.3px; }
+            .filter-group {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+            }
+            .filter-group label {
+                font-size: 11px;
+                font-weight: 700;
+                text-transform: uppercase;
+                color: #999;
+                letter-spacing: 0.3px;
+            }
             .filter-group input[type="text"],
             .filter-group input[type="number"],
             .filter-group select {
-                padding: 7px 10px; font-size: 13px; border: 1px solid #ccc; border-radius: 5px; outline: none;
+                padding: 7px 10px;
+                font-size: 13px;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+                outline: none;
                 min-width: 110px;
             }
-            .filter-group input:focus, .filter-group select:focus { border-color: #2980b9; }
-            .filter-price-range { display: flex; align-items: center; gap: 6px; }
-            .filter-price-range span { color: #aaa; font-size: 12px; }
-            .filter-actions { display: flex; gap: 8px; }
-            .btn-filter { padding: 8px 20px; background: #2980b9; color: #fff; border: none; border-radius: 5px; font-size: 13px; font-weight: 600; cursor: pointer; }
-            .btn-filter:hover { background: #1f6fa0; }
-            .btn-reset { padding: 8px 16px; background: #fff; color: #666; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; cursor: pointer; text-decoration: none; }
-            .btn-reset:hover { background: #f0f0f0; }
+            .filter-group input:focus, .filter-group select:focus {
+                border-color: #2980b9;
+            }
+            .filter-price-range {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+            .filter-price-range span {
+                color: #aaa;
+                font-size: 12px;
+            }
+            .filter-actions {
+                display: flex;
+                gap: 8px;
+            }
+            .btn-filter {
+                padding: 8px 20px;
+                background: #2980b9;
+                color: #fff;
+                border: none;
+                border-radius: 5px;
+                font-size: 13px;
+                font-weight: 600;
+                cursor: pointer;
+            }
+            .btn-filter:hover {
+                background: #1f6fa0;
+            }
+            .btn-reset {
+                padding: 8px 16px;
+                background: #fff;
+                color: #666;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+                font-size: 13px;
+                cursor: pointer;
+                text-decoration: none;
+            }
+            .btn-reset:hover {
+                background: #f0f0f0;
+            }
 
             /* ===== TABLE ===== */
             .data-table {
@@ -228,10 +282,13 @@
         </c:if>
 
         <div class="page-content">
-            <div class="page-header">
-                <h1 class="page-title">List of products</h1>
-                <a href="addProduct.jsp" class="btn-add">+ Add product</a>
-            </div>
+            <c:if test="${sessionScope.login.roleInSystem == 1}">
+                <div class="page-header">
+                    <h1 class="page-title">List of products</h1>
+                    <a href="addProduct.jsp" class="btn-add">+ Add product</a>
+                </div>
+            </c:if>
+
 
             <%-- ===== SEARCH & FILTER BAR ===== --%>
             <form action="ProductController" method="GET" class="filter-bar">
@@ -354,9 +411,6 @@
                                     </td>
 
                                     <td>${p.postedDate}</td>
-
-                                    <%-- Always render the Action cell so row/header column counts stay aligned,
-                                         regardless of role. Buttons themselves are still admin-only. --%>
                                     <c:choose>
                                         <c:when test="${not empty sessionScope.login and sessionScope.login.roleInSystem == 1}">
                                             <td>

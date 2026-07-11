@@ -5,9 +5,9 @@
 <%@ page import="Model.Category" %> 
 <%@ page import="java.util.List" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 
 <%
-    // Đẩy dữ liệu vào pageContext để sử dụng với EL
     String id = request.getParameter("id");
     Product p = new ProductService().getObjectById(id);
     List<Category> cats = new CategoryService().listAll();
@@ -22,7 +22,6 @@
         <meta charset="UTF-8">
         <title>Update Product</title>
         <style>
-            /* (Tui giữ nguyên toàn bộ CSS của bạn, vì nó đã hiển thị tốt rồi) */
             .page-content {
                 padding: 24px 32px;
             }
@@ -298,12 +297,16 @@
             </div>
 
             <h1 class="page-title">Update product</h1>
-            
+
             <c:if test="${not empty param.success_msg}">
                 <div class="alert alert-success">${param.success_msg}</div>
             </c:if>
             <c:if test="${not empty param.error_msg}">
                 <div class="alert alert-error">&#10007; <c:out value="${param.error_msg}"/></div>
+            </c:if>
+
+            <c:if test="${sessionScope.login.roleInSystem != 1}">
+                <c:redirect url="index.jsp"></c:redirect>
             </c:if>
 
             <form action="ProductController" method="POST" enctype="multipart/form-data">
@@ -322,12 +325,19 @@
 
                     <div class="form-group">
                         <label>Post date <span class="required">*</span></label>
-                        <input type="date" name="postDate" value="${p.postedDate}">
+                        <fmt:formatDate value="${p.postedDate}" pattern="yyyy-MM-dd" var="formattedDate" />
+                        <input type="date" name="postDate" value="${formattedDate}">
                     </div>
 
                     <div class="form-group full">
                         <label>Product name <span class="required">*</span></label>
                         <input type="text" name="productName" value="<c:out value="${p.productName}"/>" placeholder="Product name">
+                    </div>
+
+                    <%-- Unit --%>
+                    <div class="form-group">
+                        <label>Unit</label>
+                        <input type ="text" name="unit" value="<c:out value="${p.unit}"/>" placeholder="Describe the unit of the product...">
                     </div>
 
                     <div class="form-group">

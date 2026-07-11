@@ -49,7 +49,7 @@ public class ProductService implements Accessible<Product> {
             Product ProductUpdate = em.find(Product.class, obj.getProductId());
             if (ProductUpdate != null) {
                 em.getTransaction().begin();
-                em.merge(ProductUpdate);
+                em.merge(obj);
                 em.getTransaction().commit();
                 result = 1;
             }
